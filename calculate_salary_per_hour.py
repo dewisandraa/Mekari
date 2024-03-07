@@ -12,16 +12,10 @@ def load_data(employees_file, timesheets_file):
     # Ensure consistent column naming
     employees_df.rename(columns={"employe_id": "employee_id"}, inplace=True)
 
-    # Convert date and time columns to datetime
-    # timesheets_df['checkin_datetime'] = pd.to_datetime(timesheets_df['checkin'], errors='coerce')
-    # timesheets_df['checkout_datetime'] = pd.to_datetime(timesheets_df['checkout'], errors='coerce')
     timesheets_df["date"] = pd.to_datetime(timesheets_df['date'])
 
     employees_df['join_date'] = pd.to_datetime(employees_df['join_date'])
     employees_df['resign_date'] = pd.to_datetime(employees_df['resign_date'].fillna(datetime.now()))
-
-    # Calculate working hours
-    # timesheets_df['working_hours'] = (timesheets_df['checkout_datetime'] - timesheets_df['checkin_datetime']).dt.total_seconds() / 3600
 
     return employees_df, timesheets_df
 
@@ -49,7 +43,7 @@ def impute_missing_times(timesheets_df):
     
     # Calculate mean check-in and check-out times in seconds for each employee
     avg_times = timesheets_df.groupby('employee_id')[['checkin_seconds', 'checkout_seconds']].mean()
-    print(avg_times)
+
     # Join the average times back to the original dataframe
     timesheets_df = pd.merge(timesheets_df, avg_times, on='employee_id', suffixes=('', '_avg'))
     
@@ -94,10 +88,9 @@ def calculate_salary_per_hour(employees_df, timesheets_df):
 def main():
     employees_df, timesheets_df = load_data('./datasets/employees.csv', './datasets/timesheets.csv')
     timesheets_df = impute_missing_times(timesheets_df)
-    # print(timesheets_df.describe())
     salary_per_hour_df = calculate_salary_per_hour(employees_df, timesheets_df)
     print(salary_per_hour_df)
-    # Append to the destination table (example)
+    #Append or update to a db with new calculations
     # salary_per_hour_df.to_sql('salary_per_hour_table', engine, if_exists='append', index=False)
 
 if __name__ == "__main__":
