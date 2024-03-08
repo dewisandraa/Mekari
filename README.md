@@ -24,3 +24,51 @@ The transformation script computes salary per hour by:
 - Calculating the salary per hour for each branch on a monthly basis.
 
 The resulting data is loaded into a destination table
+
+# Python Script
+
+The Python script performs the following tasks:
+
+### `load_data`
+- **Purpose**: Loads employees and timesheets data from CSV files, ensuring data consistency and preparing it for processing.
+- **Inputs**:
+  - `employees_file`: The path to the employees CSV file.
+  - `timesheets_file`: The path to the timesheets CSV file.
+- **Process**:
+  1. Loads data into DataFrames.
+  2. Renames columns to ensure consistency.
+  3. Converts date columns to datetime format.
+- **Outputs**: Returns prepared DataFrames for employees and timesheets.
+
+### `time_to_seconds` and `seconds_to_time`
+- **Purpose**: Helper functions to convert times to seconds and seconds to time strings, facilitating time calculations.
+
+### `impute_missing_times`
+- **Purpose**: Imputes missing check-in and check-out times based on the average times for each employee and recalculates working hours.
+- **Inputs**:
+  - `timesheets_df`: DataFrame containing timesheets data.
+- **Process**:
+  1. Converts check-in and check-out times to seconds.
+  2. Calculates mean check-in and check-out times in seconds for each employee.
+  3. Imputes missing times with average times.
+  4. Converts seconds back to time format.
+  5. Calculates working hours.
+  6. Cleans up temporary columns.
+- **Outputs**: Updated timesheets DataFrame with imputed times and calculated working hours.
+
+### `calculate_salary_per_hour`
+- **Purpose**: Calculates the salary per hour for each branch, per month.
+- **Inputs**:
+  - `employees_df`: DataFrame containing employees data.
+  - `timesheets_df`: DataFrame containing timesheets data with imputed times.
+- **Process**:
+  1. Merges employees and timesheets DataFrames.
+  2. Filters data for valid employment periods.
+  3. Extracts year and month from dates.
+  4. Aggregates data by year, month, and branch to calculate total salary and total hours.
+  5. Calculates salary per hour.
+- **Outputs**: DataFrame containing the salary per hour for each branch, per month.
+
+## Main Script
+
+The `main` function orchestrates the execution of the script, including data loading, processing, and calculation of salary per hour. It demonstrates how to integrate these components into a cohesive workflow. The output is then appended to a database. 
