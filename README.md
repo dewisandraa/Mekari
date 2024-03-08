@@ -71,4 +71,4 @@ The Python script performs the following tasks:
 
 ## Main Script
 
-The `main` function orchestrates the execution of the script, including data loading, processing, and calculation of salary per hour. It demonstrates how to integrate these components into a cohesive workflow. The output is then appended to a database. 
+The `main` function orchestrates the execution of the script, including data loading, processing, and calculation of salary per hour. The output table is then appended to a database. 
