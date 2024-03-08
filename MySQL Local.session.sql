@@ -32,24 +32,34 @@ IGNORE 1 ROWS;
 
 DROP TABLE IF EXISTS salary_per_hour;
 
-CREATE TABLE salary_per_hour AS 
+CREATE TABLE salary_per_hour_by_branch AS
+WITH employee_hours AS (
     SELECT 
-        YEAR(t.date) AS year, 
-        MONTH(t.date) AS month, 
         e.branch_id, 
-        SUM(e.salary) / NULLIF(SUM(TIMESTAMPDIFF(HOUR, t.checkin, COALESCE(t.checkout, t.checkin))), 0) AS salary_per_hour
-    FROM 
-        timesheets t
-    JOIN 
-        employees e ON t.employee_id = e.employee_id
-    WHERE 
-        t.checkout IS NOT NULL
-        AND t.checkin <= t.checkout
-        AND (e.resign_date IS NULL OR e.resign_date >= t.date)
-    GROUP BY 
-        YEAR(t.date), 
-        MONTH(t.date), 
-        e.branch_id
-;
+        EXTRACT(YEAR FROM t.date) AS year, 
+        EXTRACT(MONTH FROM t.date) AS month, 
+        t.employee_id, 
+        SUM(EXTRACT(EPOCH FROM (checkout - checkin))/3600) AS total_hours -- Convert seconds to hours
+    FROM timesheets t
+    JOIN employees e ON t.employee_id = e.employee_id
+    WHERE t.checkout IS NOT NULL -- Ensuring checkout is recorded
+    GROUP BY e.branch_id, year, month, t.employee_id
+), aggregated_data AS (
+    SELECT 
+        branch_id, 
+        year, 
+        month, 
+        SUM(salary) AS total_salary, 
+        SUM(total_hours) AS total_hours
+    FROM employee_hours eh
+    JOIN employees e ON eh.employee_id = e.employee_id
+    GROUP BY branch_id, year, month
+)
+SELECT 
+    year, 
+    month, 
+    branch_id, 
+    (total_salary / total_hours) AS salary_per_hour
+FROM aggregated_data;
 
 CREATE INDEX idx_salary_per_hour ON salary_per_hour(year, month, branch_id);
